@@ -15,5 +15,6 @@ yarn-error.log*
 # Project
 build/
 coverage/
+coverage.json
 coverageEnv/
 

@@ -16,7 +16,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/rainer048/ENRTN.git"
+    "url": "git+https://github.com/gogolevdms/ENRTN.git"
   },
   "dependencies": {
     "ganache-cli": "^6.1.3",
@@ -29,9 +29,9 @@
   "author": "cryptosec team",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/rainer048/ENRTN/issues"
+    "url": "https://github.com/gogolevdms/ENRTN/issues"
   },
-  "homepage": "https://github.com/rainer048/ENRTN#readme",
+  "homepage": "https://github.com/gogolevdms/ENRTN#readme",
   "devDependencies": {
     "solidity-coverage": "^0.5.4"
   }
