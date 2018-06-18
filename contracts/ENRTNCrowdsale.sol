@@ -178,6 +178,8 @@ contract ENRTNCrowdsale is Pausable {
         weiRaised = weiRaised.add(weiAmount);
 
         uint256 tokensAmount = weiAmount.mul(rate);
+        require(tokensAmount > 1);
+
         uint256 bonus = getBonusInPercent(weiAmount);
         tokensAmount = tokensAmount + tokensAmount.mul(bonus).div(100);
 
