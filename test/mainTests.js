@@ -247,6 +247,29 @@ contract('Main tests', async (accounts) => {
         assert.ok(err instanceof Error);
     });
 
+    // increase and decrease functons
+    it('when the owner call increase if paused', async function () {
+        const amount = new BigNumber(100);
+        await token.increaseApproval(recipient, amount);
+        let allowanceOfRecepient = await token.allowance(owner, recipient);
+        assert.equal(allowanceOfRecepient.valueOf(), amount.valueOf());
+    });
+
+    it('when the owner call increase if paused', async function () {
+        const initialAmount = new BigNumber(100);
+        const amount = new BigNumber(30);
+        await token.decreaseApproval(recipient, amount);
+        let allowanceOfRecepient = await token.allowance(owner, recipient);
+        assert.equal(allowanceOfRecepient.valueOf(), (initialAmount - amount).valueOf());
+
+        await token.decreaseApproval(recipient, initialAmount);
+        allowanceOfRecepient = await token.allowance(owner, recipient);
+        assert.equal(allowanceOfRecepient.valueOf(), 0);
+    });
+
+    // end of increase and decrease
+
+
     it('when the sender has enough balance', async function () {
         const startBalanceOfOwner = allTokens;
         const amount = new BigNumber(100);
