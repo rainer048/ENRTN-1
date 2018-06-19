@@ -1,6 +1,12 @@
 const TokenContract = artifacts.require("./ENRTNToken.sol");
 const CrowdsaleContract = artifacts.require("./ENRTNCrowdsale.sol");
 
+const BigNumber = web3.BigNumber;
+
+require('chai')
+    .use(require('chai-bignumber')(BigNumber))
+    .should();
+
 contract('Main tests', async (accounts) => {
     const nullAddress = '0x0000000000000000000000000000000000000000';
     const owner = accounts[0];
@@ -8,7 +14,7 @@ contract('Main tests', async (accounts) => {
     const sender = accounts[1];
     const recipient = accounts[2];
     const pendingOwner = accounts[3];
-    const allTokens = 72800000 * 10 ** 18;
+    const allTokens = new BigNumber(72800000 * 10 ** 18);
 
     beforeEach(async function() {
         token = await TokenContract.deployed();
@@ -196,12 +202,12 @@ contract('Main tests', async (accounts) => {
     });
 
     it('when the sender has enough balance', async function () {
-        const amount = 100;
+        const amount = new BigNumber(100);
 
-        await token.transfer(recipient, amount);
+        await token.transfer(recipient, amount.valueOf());
 
         const recipientBalance = await token.balanceOf(recipient);
-        assert.equal(recipientBalance.valueOf(), amount);
+        assert.equal(recipientBalance.valueOf(), amount.valueOf());
 
     });
 
@@ -231,11 +237,21 @@ contract('Main tests', async (accounts) => {
         assert.equal(paused.valueOf(), false);
     });
 
+    it('when the owner call unpause twice', async function () {
+        let err;
+        try {
+            await token.unpause();
+        } catch (error) {
+            err = error;
+        }
+        assert.ok(err instanceof Error);
+    });
+
     it('when the sender has enough balance', async function () {
         const startBalanceOfOwner = allTokens;
-        const amount = 100;
+        const amount = new BigNumber(100);
 
-        await token.transfer(owner, amount, {from: recipient});
+        await token.transfer(owner, amount.valueOf(), {from: recipient});
 
         const recipientBalance = await token.balanceOf(recipient);
         assert.equal(recipientBalance.valueOf(), 0);
@@ -245,21 +261,21 @@ contract('Main tests', async (accounts) => {
     });
 
     it('reclaim token functon in token contract', async function () {
-        const amount = 100;
+        const amount = new BigNumber(100);
         const startBalanceOfOwner = allTokens;
 
-        await token.transfer(recipient, amount);
+        await token.transfer(recipient, amount.valueOf());
 
         const recipientBalance = await token.balanceOf(recipient);
-        assert.equal(recipientBalance.valueOf(), amount);
+        assert.equal(recipientBalance.valueOf(), amount.valueOf());
 
-        await token.transfer(token.address, amount);
+        await token.transfer(token.address, amount.valueOf(), {from: recipient});
         const contractBalance = await token.balanceOf(token.address);
-        assert.equal(contractBalance.valueOf(), amount);
+        assert.equal(contractBalance.valueOf(), amount.valueOf());
 
         await token.reclaimToken(token.address);
         let balanceOfOwner = await token.balanceOf(owner);
-        assert.equal(balanceOfOwner.valueOf(), startBalanceOfOwner);
+        assert.equal(balanceOfOwner.valueOf(), startBalanceOfOwner.valueOf());
     });
 
     it('when the not owner call pause', async function () {
@@ -278,6 +294,21 @@ contract('Main tests', async (accounts) => {
         assert.equal(paused.valueOf(), true);
     });
 
+    it('when the owner burn tokens', async function () {
+        await token.burn(allTokens);
 
+        let balanceOfOwner = await token.balanceOf(owner);
+        assert.equal(balanceOfOwner.valueOf(), 0);
+    });
+
+    it('when the not owner call pause', async function () {
+        let err;
+        try {
+            await token.burn(allTokens);
+        } catch (error) {
+            err = error;
+        }
+        assert.ok(err instanceof Error);
+    });
 
 });
