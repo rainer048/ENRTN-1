@@ -248,14 +248,14 @@ contract('Main tests', async (accounts) => {
     });
 
     // increase and decrease functons
-    it('when the owner call increase if paused', async function () {
+    it('when the owner call increase', async function () {
         const amount = new BigNumber(100);
         await token.increaseApproval(recipient, amount);
         let allowanceOfRecepient = await token.allowance(owner, recipient);
         assert.equal(allowanceOfRecepient.valueOf(), amount.valueOf());
     });
 
-    it('when the owner call increase if paused', async function () {
+    it('when the owner call decrease', async function () {
         const initialAmount = new BigNumber(100);
         const amount = new BigNumber(30);
         await token.decreaseApproval(recipient, amount);
@@ -268,7 +268,6 @@ contract('Main tests', async (accounts) => {
     });
 
     // end of increase and decrease
-
 
     it('when the sender has enough balance', async function () {
         const startBalanceOfOwner = allTokens;
@@ -301,6 +300,75 @@ contract('Main tests', async (accounts) => {
         assert.equal(balanceOfOwner.valueOf(), startBalanceOfOwner.valueOf());
     });
 
+    // transferFrom + approve tests
+    it('approve token functon in token contract', async function () {
+        const amount = new BigNumber(100);
+
+        await token.transfer(sender, amount.valueOf());
+
+        const senderBalance = await token.balanceOf(sender);
+        assert.equal(senderBalance.valueOf(), amount.valueOf());
+
+        await token.approve(recipient, amount / 2, {from: sender});
+        let allowanceOfRecepient = await token.allowance(sender, recipient);
+        assert.equal(allowanceOfRecepient.valueOf(), amount / 2);
+    });
+
+    it('when to is null address', async function () {
+        const amount = new BigNumber(50);
+
+        let err;
+        try {
+            await token.transferFrom(sender, nullAddress, amount.valueOf(), {from: recipient});
+        } catch (error) {
+            err = error;
+        }
+        assert.ok(err instanceof Error);
+    });
+
+    it('when tokenAmount is big', async function () {
+        const amount = new BigNumber(200);
+
+        let err;
+        try {
+            await token.transferFrom(sender, owner, amount.valueOf(), {from: recipient});
+        } catch (error) {
+            err = error;
+        }
+        assert.ok(err instanceof Error);
+    });
+
+    it('when tokenAmount is big', async function () {
+        const amount = new BigNumber(51);
+
+        let err;
+        try {
+            await token.transferFrom(sender, owner, amount.valueOf(), {from: recipient});
+        } catch (error) {
+            err = error;
+        }
+        assert.ok(err instanceof Error);
+    });
+
+    it('transferFrom token functon in token contract', async function () {
+        const amount = new BigNumber(50);
+        const startBalanceOfOwner = allTokens;
+
+        await token.transferFrom(sender, owner, amount.valueOf(), {from: recipient});
+
+        const senderBalance = await token.balanceOf(sender);
+        assert.equal(senderBalance.valueOf(), amount);
+
+        let allowanceOfRecepient = await token.allowance(sender, recipient);
+        assert.equal(allowanceOfRecepient.valueOf(), 0);
+
+        await token.transfer(owner, amount.valueOf(), {from: sender});
+
+        let balanceOfOwner = await token.balanceOf(owner);
+        assert.equal(balanceOfOwner.valueOf(), startBalanceOfOwner);
+    });
+    // end of transferFrom + approve tests
+
     it('when the not owner call pause', async function () {
         let err;
         try {
@@ -315,6 +383,16 @@ contract('Main tests', async (accounts) => {
         await token.pause();
         let paused = await token.paused.call();
         assert.equal(paused.valueOf(), true);
+    });
+
+    it('when not owner call burn if paused', async function () {
+        let err;
+        try {
+            await token.burn(allTokens, {from: notOwner});
+        } catch (error) {
+            err = error;
+        }
+        assert.ok(err instanceof Error);
     });
 
     it('when the owner burn tokens', async function () {
