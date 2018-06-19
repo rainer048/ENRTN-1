@@ -10,7 +10,6 @@ contract ERC20Token {
     function allowance(address who, address spender) public view returns(uint256);
     event Transfer(address indexed from, address indexed to, uint256 value);
     event Approval(address indexed who, address indexed spender, uint256 value);
-
 }
 
 

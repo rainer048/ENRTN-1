@@ -244,4 +244,40 @@ contract('Main tests', async (accounts) => {
         assert.equal(balanceOfOwner.valueOf(), startBalanceOfOwner);
     });
 
+    it('reclaim token functon in token contract', async function () {
+        const amount = 100;
+        const startBalanceOfOwner = allTokens;
+
+        await token.transfer(recipient, amount);
+
+        const recipientBalance = await token.balanceOf(recipient);
+        assert.equal(recipientBalance.valueOf(), amount);
+
+        await token.transfer(token.address, amount);
+        const contractBalance = await token.balanceOf(token.address);
+        assert.equal(contractBalance.valueOf(), amount);
+
+        await token.reclaimToken(token.address);
+        let balanceOfOwner = await token.balanceOf(owner);
+        assert.equal(balanceOfOwner.valueOf(), startBalanceOfOwner);
+    });
+
+    it('when the not owner call pause', async function () {
+        let err;
+        try {
+            await token.pause({from: notOwner});
+        } catch (error) {
+            err = error;
+        }
+        assert.ok(err instanceof Error);
+    });
+
+    it('when the owner call pause if not paused', async function () {
+        await token.pause();
+        let paused = await token.paused.call();
+        assert.equal(paused.valueOf(), true);
+    });
+
+
+
 });
