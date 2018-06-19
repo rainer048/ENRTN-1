@@ -7,6 +7,7 @@ contract('Main tests', async (accounts) => {
     const notOwner = accounts[8];
     const sender = accounts[1];
     const recipient = accounts[2];
+    const pendingOwner = accounts[3];
     const allTokens = 72800000 * 10 ** 18;
 
     beforeEach(async function() {
@@ -21,9 +22,122 @@ contract('Main tests', async (accounts) => {
     });
 
     it('should return the owner', async function() {
-        let owner = await token.owner.call();
-        assert.equal(owner.valueOf(), accounts[0]);
+        let ownerValue = await token.owner.call();
+        assert.equal(ownerValue.valueOf(), owner);
     });
+
+    it('should return the owner', async function() {
+        let pendingOwnerValue = await token.pendingOwner.call();
+        assert.equal(pendingOwnerValue.valueOf(), nullAddress);
+    });
+
+    it('should revert incorrect msg sender', async function() {
+        let err;
+        try {
+            await token.transferOwnership(pendingOwner, {from: pendingOwner});
+        } catch (error) {
+            err = error;
+        }
+        assert.ok(err instanceof Error);
+    });
+
+    it('should call transferOwnership', async function() {
+        await token.transferOwnership(pendingOwner);
+        let pendingOwnerValue = await token.pendingOwner.call();
+        assert.equal(pendingOwnerValue.valueOf(), pendingOwner);
+    });
+
+    it('should revert incorrect msg sender', async function() {
+        let err;
+        try {
+            await token.claimOwnership();
+        } catch (error) {
+            err = error;
+        }
+        assert.ok(err instanceof Error);
+    });
+
+    it('should call transferOwnership', async function() {
+        await token.claimOwnership({from: pendingOwner});
+        let pendingOwnerValue = await token.pendingOwner.call();
+        assert.equal(pendingOwnerValue.valueOf(), nullAddress);
+        let ownerValue = await token.owner.call();
+        assert.equal(ownerValue.valueOf(), pendingOwner);
+    });
+
+    it('transferOwnership to owner', async function() {
+        await token.transferOwnership(owner, {from: pendingOwner});
+        let pendingOwnerValue = await token.pendingOwner.call();
+        assert.equal(pendingOwnerValue.valueOf(), owner);
+
+        await token.claimOwnership();
+        pendingOwnerValue = await token.pendingOwner.call();
+        assert.equal(pendingOwnerValue.valueOf(), nullAddress);
+        let ownerValue = await token.owner.call();
+        assert.equal(ownerValue.valueOf(), owner);
+    });
+
+    // end token transferOwnership
+
+    // crowdsale ownership
+
+    it('should return the owner', async function() {
+        let ownerValue = await crowdsale.owner.call();
+        assert.equal(ownerValue.valueOf(), owner);
+    });
+
+    it('should return the owner', async function() {
+        let pendingOwnerValue = await crowdsale.pendingOwner.call();
+        assert.equal(pendingOwnerValue.valueOf(), nullAddress);
+    });
+
+    it('should revert incorrect msg sender', async function() {
+        let err;
+        try {
+            await crowdsale.transferOwnership(pendingOwner, {from: pendingOwner});
+        } catch (error) {
+            err = error;
+        }
+        assert.ok(err instanceof Error);
+    });
+
+    it('should call transferOwnership', async function() {
+        await crowdsale.transferOwnership(pendingOwner);
+        let pendingOwnerValue = await crowdsale.pendingOwner.call();
+        assert.equal(pendingOwnerValue.valueOf(), pendingOwner);
+    });
+
+    it('should revert incorrect msg sender', async function() {
+        let err;
+        try {
+            await crowdsale.claimOwnership();
+        } catch (error) {
+            err = error;
+        }
+        assert.ok(err instanceof Error);
+    });
+
+    it('should call transferOwnership', async function() {
+        await crowdsale.claimOwnership({from: pendingOwner});
+        let pendingOwnerValue = await crowdsale.pendingOwner.call();
+        assert.equal(pendingOwnerValue.valueOf(), nullAddress);
+        let ownerValue = await crowdsale.owner.call();
+        assert.equal(ownerValue.valueOf(), pendingOwner);
+    });
+
+    it('transferOwnership to owner', async function() {
+        await crowdsale.transferOwnership(owner, {from: pendingOwner});
+        let pendingOwnerValue = await crowdsale.pendingOwner.call();
+        assert.equal(pendingOwnerValue.valueOf(), owner);
+
+        await crowdsale.claimOwnership();
+        pendingOwnerValue = await crowdsale.pendingOwner.call();
+        assert.equal(pendingOwnerValue.valueOf(), nullAddress);
+        let ownerValue = await crowdsale.owner.call();
+        assert.equal(ownerValue.valueOf(), owner);
+    });
+
+    // end crowdsale transferOwnership
 
     it('should return the pause', async function() {
         let paused = await token.paused.call();
