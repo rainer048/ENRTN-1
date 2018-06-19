@@ -160,7 +160,7 @@ contract ENRTNToken is ERC20, Pausable {
   }
 
   function setCrowdSaleContract(address _crowdSaleContract) public onlyOwner {
-      require(crowdSaleContract != address(0));
+      require(_crowdSaleContract != address(0));
       crowdSaleContract = _crowdSaleContract;
   }
 
