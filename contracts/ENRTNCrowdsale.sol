@@ -156,7 +156,7 @@ contract ENRTNCrowdsale is Pausable {
         rate = _rate;
     }
 
-    function setPrice(uint _rate) public onlyOwner {
+    function setRate(uint _rate) public onlyOwner {
         rate = _rate;
     }
 
@@ -275,6 +275,10 @@ contract ENRTNCrowdsale is Pausable {
         }
     }
 
+    function reclaimToken(ERC20Token anyToken) external onlyOwner {
+        uint256 balance = anyToken.balanceOf(this);
+        anyToken.transfer(owner, balance);
+    }
 }
 
 /**
