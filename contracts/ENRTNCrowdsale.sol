@@ -203,6 +203,11 @@ contract ENRTNCrowdsale is Pausable {
         saleStop = _stop;
     }
 
+    function setSaleDateUnsafe(uint256 _start, uint256 _stop) public onlyOwner {
+        saleStart = _start;
+        saleStop = _stop;
+    }
+
     function getBonusInPercent(uint256 weiAmount) public view returns(uint256) {
         if (now >= privateSaleStart && now <= privateSaleStop) {
             if (weiAmount > 30 ether) {
