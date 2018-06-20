@@ -21,6 +21,27 @@ contract('Main tests', async (accounts) => {
         crowdsale = await CrowdsaleContract.deployed();
     });
 
+    it('should revert incorrect address', async function() {
+        let err;
+        try {
+            await token.setCrowdSaleContract(nullAddress);
+        } catch (error) {
+            err = error;
+        }
+        assert.ok(err instanceof Error);
+    });
+
+    it('the crowdsale address in token contract is null', async function() {
+        const crowdSaleContractValue = await token.crowdSaleContract.call();
+        assert.equal(crowdSaleContractValue.valueOf(), nullAddress, "crowdsale address is not correct");
+    });
+
+    it('should set the crowdsale address to token contract', async function() {
+        await token.setCrowdSaleContract(crowdsale.address);
+        const crowdSaleContractValue = await token.crowdSaleContract.call();
+        assert.equal(crowdSaleContractValue.valueOf(), crowdsale.address, "crowdsale address is not correct");
+    });
+
     it('should return the correct totalSupply erc20 after construction', async function() {
         let totalSupply_ = await token.totalSupply();
         const pendingSupply = allTokens;
@@ -156,26 +177,7 @@ contract('Main tests', async (accounts) => {
         assert.equal(balanceOf.valueOf(),  pendingBalanceOf, "balance is not correct");
     });
 
-    it('should revert incorrect address', async function() {
-        let err;
-        try {
-            await token.setCrowdSaleContract(nullAddress);
-        } catch (error) {
-            err = error;
-        }
-        assert.ok(err instanceof Error);
-    });
 
-    it('the crowdsale address in token contract is null', async function() {
-        const crowdSaleContractValue = await token.crowdSaleContract.call();
-        assert.equal(crowdSaleContractValue.valueOf(), nullAddress, "crowdsale address is not correct");
-    });
-
-    it('should set the crowdsale address to token contract', async function() {
-        await token.setCrowdSaleContract(crowdsale.address);
-        const crowdSaleContractValue = await token.crowdSaleContract.call();
-        assert.equal(crowdSaleContractValue.valueOf(), crowdsale.address, "crowdsale address is not correct");
-    });
 
     it('when the sender does not have enough balance', async function () {
         const amount = allTokens * 2;
@@ -370,8 +372,8 @@ contract('Main tests', async (accounts) => {
     // end of transferFrom + approve tests
 
 
-    // CrowdSale tests 
-    
+    // CrowdSale tests
+
     it('set private sale date', async function () {
         const time = parseInt(Date.now() / 1000);
 
@@ -487,7 +489,7 @@ contract('Main tests', async (accounts) => {
         let percent31ETH = await crowdsale.getBonusInPercent(31000000000000000000);
         let percent11ETH = await crowdsale.getBonusInPercent(11000000000000000000);
         let percent5ETH = await crowdsale.getBonusInPercent(5000000000000000000);
-        
+
         assert.equal(percent31ETH.valueOf(), 30);
         assert.equal(percent11ETH.valueOf(), 25);
         assert.equal(percent5ETH.valueOf(), 20);
@@ -503,7 +505,7 @@ contract('Main tests', async (accounts) => {
         let percent31ETH = await crowdsale.getBonusInPercent(31000000000000000000);
         let percent11ETH = await crowdsale.getBonusInPercent(11000000000000000000);
         let percent1ETH = await crowdsale.getBonusInPercent(1000000000000000000);
-        
+
         assert.equal(percent51ETH.valueOf(), 25);
         assert.equal(percent31ETH.valueOf(), 20);
         assert.equal(percent11ETH.valueOf(), 15);
@@ -520,7 +522,7 @@ contract('Main tests', async (accounts) => {
         let percent31ETH = await crowdsale.getBonusInPercent(31000000000000000000);
         let percent12ETH = await crowdsale.getBonusInPercent(12000000000000000000);
         let percent1ETH = await crowdsale.getBonusInPercent(1000000000000000000);
-        
+
         assert.equal(percent31ETH.valueOf(), 15);
         assert.equal(percent12ETH.valueOf(), 10);
         assert.equal(percent1ETH.valueOf(), 7);
@@ -538,6 +540,44 @@ contract('Main tests', async (accounts) => {
     });
 
     // end crowdsale tests
+
+    it('simple crowdsale', async function () {
+        const tokensAmountForCrowdsale = new BigNumber(10 * 10 ** 18);
+        const time = parseInt(Date.now() / 1000);
+        const rate = 1;
+        const valueInWei = new BigNumber(rate * 10 ** 18);
+        const calcAmount = new BigNumber(1070000000000000000);
+
+        const crowdSaleContractValue = await token.crowdSaleContract.call();
+        assert.equal(crowdSaleContractValue.valueOf(), crowdsale.address, "crowdsale address is not correct");
+
+        let weiRaisedValue = await crowdsale.weiRaised.call();
+        assert.equal(weiRaisedValue.valueOf(), 0, "weiRaisedValue is not correct");
+
+        let rateValue = await crowdsale.rate.call();
+        assert.equal(rateValue.valueOf(), rate, "rateValue is not correct");
+
+        await token.transfer(crowdsale.address, tokensAmountForCrowdsale.valueOf());
+
+        let crowdsaleBalance = await token.balanceOf(crowdsale.address);
+        assert.equal(crowdsaleBalance.valueOf(), tokensAmountForCrowdsale.valueOf());
+
+        let senderBalance = await token.balanceOf(sender);
+        assert.equal(senderBalance.valueOf(), 0);
+
+        await crowdsale.setSaleDate(time, time + 10000000);
+
+        web3.eth.sendTransaction({ from: sender, to: crowdsale.address, value: valueInWei });
+
+        weiRaisedValue = await crowdsale.weiRaised.call();
+        assert.equal(weiRaisedValue.valueOf(), valueInWei, "weiRaisedValue address is not correct");
+
+        senderBalance = await token.balanceOf(sender);
+        assert.equal(senderBalance.valueOf(), calcAmount.valueOf());
+
+        crowdsaleBalance = await token.balanceOf(crowdsale.address);
+        assert.equal(crowdsaleBalance.valueOf(), tokensAmountForCrowdsale.valueOf() - senderBalance.valueOf());
+    });
 
     it('when the not owner call pause', async function () {
         let err;
@@ -566,13 +606,15 @@ contract('Main tests', async (accounts) => {
     });
 
     it('when the owner burn tokens', async function () {
-        await token.burn(allTokens);
-
         let balanceOfOwner = await token.balanceOf(owner);
+
+        await token.burn(balanceOfOwner);
+
+        balanceOfOwner = await token.balanceOf(owner);
         assert.equal(balanceOfOwner.valueOf(), 0);
     });
 
-    it('when the not owner call pause', async function () {
+    it('when the burn twice', async function () {
         let err;
         try {
             await token.burn(allTokens);

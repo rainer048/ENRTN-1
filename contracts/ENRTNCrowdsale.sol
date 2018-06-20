@@ -123,6 +123,10 @@ contract ENRTNCrowdsale is Pausable {
     // Address where funds are collected
     address public wallet;
 
+    // How many token units a buyer gets per wei.
+    // The rate is the conversion between wei and the smallest and indivisible token unit.
+    // So, if you are using a rate of 1 with a token with 3 decimals called TOK
+    // 1 wei will give you 1 unit, or 0.001 TOK.
     uint256 public rate;
     uint256 public weiRaised;
 
@@ -136,6 +140,7 @@ contract ENRTNCrowdsale is Pausable {
     uint256 public updatePeriod;
 
     event TokenPurchase(
+        address indexed purchaser,
         address indexed beneficiary,
         uint256 value,
         uint256 amount
@@ -166,14 +171,15 @@ contract ENRTNCrowdsale is Pausable {
         weiRaised = weiRaised.add(weiAmount);
 
         uint256 tokensAmount = weiAmount.mul(rate);
-        require(tokensAmount >= 1);
+        require(tokensAmount >= 10 ** 18); // 1 token for tokens with decimals 18
 
         uint256 bonus = getBonusInPercent(weiAmount);
         tokensAmount = tokensAmount + tokensAmount.mul(bonus).div(100);
 
-        token.transferFrom(owner, _beneficiary, tokensAmount);
+        token.transfer(_beneficiary, tokensAmount);
+        wallet.transfer(msg.value);
 
-        emit TokenPurchase(_beneficiary, weiAmount, tokensAmount);
+        emit TokenPurchase(msg.sender, _beneficiary, weiAmount, tokensAmount);
     }
 
     function setPrivateSaleDate(uint256 _start, uint256 _stop) public onlyOwner {
