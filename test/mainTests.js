@@ -590,6 +590,36 @@ contract('Main tests', async (accounts) => {
         assert.equal(await crowdsale.rate.call().valueOf(), 1);
 
     });
+    
+    it('pause and unpause crowdsale', async function () {
+
+        await crowdsale.pause();
+        let pausedCrowdsale = await crowdsale.paused.call();
+        assert.equal(pausedCrowdsale.valueOf(), true);
+
+        await crowdsale.unpause();
+        pausedCrowdsale = await crowdsale.paused.call();
+        assert.equal(pausedCrowdsale.valueOf(), false);
+
+    });
+
+    it('reclaim functon in crowdsale contract', async function () {
+        amount = new BigNumber(10);
+        startBalanceOfOwner = allTokens;
+
+        await token.transfer(recipient, amount.valueOf());
+
+        recipientBalance = await token.balanceOf(recipient);
+        assert.equal(recipientBalance.valueOf(), amount.valueOf());
+
+        await token.transfer(crowdsale.address, amount.valueOf(), {from: recipient});
+        const contractBalance = await token.balanceOf(crowdsale.address);
+        assert.equal(contractBalance.valueOf(), amount.valueOf());
+
+        await crowdsale.reclaimToken(token.address);
+        let balanceOfOwner = await token.balanceOf(owner);
+        assert.equal(balanceOfOwner.valueOf(), startBalanceOfOwner.valueOf());
+    });
 
 
     // end crowdsale tests
