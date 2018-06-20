@@ -422,7 +422,7 @@ contract('Main tests', async (accounts) => {
         assert.equal(preSaleStopValue, time + 100000);
     });
 
-    it('when private sale date start < now', async function () {
+    it('when pre sale date start < now', async function () {
         const time = parseInt(Date.now() / 1000);
 
         let err;
@@ -434,7 +434,7 @@ contract('Main tests', async (accounts) => {
         assert.ok(err instanceof Error);
     });
 
-    it('when private sale date start > stop', async function () {
+    it('when pre sale date start > stop', async function () {
         const time = parseInt(Date.now() / 1000);
 
         let err;
@@ -458,7 +458,7 @@ contract('Main tests', async (accounts) => {
         assert.equal(saleStopValue, time + 10000000);
     });
 
-    it('when private sale date start < now', async function () {
+    it('when sale date start < now', async function () {
         const time = parseInt(Date.now() / 1000);
 
         let err;
@@ -470,7 +470,7 @@ contract('Main tests', async (accounts) => {
         assert.ok(err instanceof Error);
     });
 
-    it('when private sale date start > stop', async function () {
+    it('when sale date start > stop', async function () {
         const time = parseInt(Date.now() / 1000);
 
         let err;
@@ -515,19 +515,64 @@ contract('Main tests', async (accounts) => {
 
     });
 
-    it('get sale percent ', async function () {
-        const time = parseInt(Date.now() / 1000);
-        await crowdsale.setSaleDate(time, time + 1000);
+   it('get sale percent ', async function () {
+        let time = parseInt(Date.now() / 1000);
+        await crowdsale.setSaleDateUnsafe(time+1000, time + 10000);
 
         let percent31ETH = await crowdsale.getBonusInPercent(31000000000000000000);
         let percent12ETH = await crowdsale.getBonusInPercent(12000000000000000000);
         let percent1ETH = await crowdsale.getBonusInPercent(1000000000000000000);
+        
+        assert.equal(percent31ETH.valueOf(), 0);
+        assert.equal(percent12ETH.valueOf(), 0);
+        assert.equal(percent1ETH.valueOf(), 0);
+
+        time = parseInt(Date.now() / 1000);
+        await crowdsale.setSaleDateUnsafe(time, time + 10000000);
+
+        percent31ETH = await crowdsale.getBonusInPercent(31000000000000000000);
+        percent12ETH = await crowdsale.getBonusInPercent(12000000000000000000);
+        percent1ETH = await crowdsale.getBonusInPercent(1000000000000000000);
 
         assert.equal(percent31ETH.valueOf(), 15);
         assert.equal(percent12ETH.valueOf(), 10);
         assert.equal(percent1ETH.valueOf(), 7);
 
-        await crowdsale.setSaleDate(time + 1000000, time + 10000000);
+        time = parseInt(Date.now() / 1000);
+        await crowdsale.setSaleDateUnsafe(time - 8*24*60*60, time + 100000000);
+
+        percent31ETH = await crowdsale.getBonusInPercent(31000000000000000000);
+        percent12ETH = await crowdsale.getBonusInPercent(12000000000000000000);
+        percent1ETH = await crowdsale.getBonusInPercent(1000000000000000000);
+
+        assert.equal(percent31ETH.valueOf(), 10);
+        assert.equal(percent12ETH.valueOf(), 7);
+        assert.equal(percent1ETH.valueOf(), 5);
+
+        time = parseInt(Date.now() / 1000);
+        await crowdsale.setSaleDateUnsafe(time - 15*24*60*60, time + 100000000);
+
+        percent31ETH = await crowdsale.getBonusInPercent(31000000000000000000);
+        percent12ETH = await crowdsale.getBonusInPercent(12000000000000000000);
+        percent1ETH = await crowdsale.getBonusInPercent(1000000000000000000);
+
+        assert.equal(percent31ETH.valueOf(), 8);
+        assert.equal(percent12ETH.valueOf(), 4);
+        assert.equal(percent1ETH.valueOf(), 2);
+
+        time = parseInt(Date.now() / 1000);
+        await crowdsale.setSaleDateUnsafe(time - 22*24*60*60, time + 1000000000);
+
+        percent31ETH = await crowdsale.getBonusInPercent(31000000000000000000);
+        percent12ETH = await crowdsale.getBonusInPercent(12000000000000000000);
+        percent1ETH = await crowdsale.getBonusInPercent(1000000000000000000);
+
+        assert.equal(percent31ETH.valueOf(), 5);
+        assert.equal(percent12ETH.valueOf(), 2);
+        assert.equal(percent1ETH.valueOf(), 0);
+
+        time = parseInt(Date.now() / 1000);
+        await crowdsale.setSaleDateUnsafe(time - 29*24*60*60, time + 1000000000);
 
         percent31ETH = await crowdsale.getBonusInPercent(31000000000000000000);
         percent12ETH = await crowdsale.getBonusInPercent(12000000000000000000);
@@ -538,6 +583,14 @@ contract('Main tests', async (accounts) => {
         assert.equal(percent1ETH.valueOf(), 0);
 
     });
+
+    it('set token rate', async function () {
+
+        await crowdsale.setRate(1);
+        assert.equal(await crowdsale.rate.call().valueOf(), 1);
+
+    });
+
 
     // end crowdsale tests
 
