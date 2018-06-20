@@ -130,6 +130,8 @@ contract ENRTNCrowdsale is Pausable {
     uint256 public rate;
     uint256 public weiRaised;
 
+    uint256 decimalsOfToken = 18; //default value
+
     // Dates
     uint256 public privateSaleStart;
     uint256 public privateSaleStop;
@@ -171,7 +173,7 @@ contract ENRTNCrowdsale is Pausable {
         weiRaised = weiRaised.add(weiAmount);
 
         uint256 tokensAmount = weiAmount.mul(rate);
-        require(tokensAmount >= 10 ** 18); // 1 token for tokens with decimals 18
+        require(tokensAmount >= 10 ** decimalsOfToken); // 1 token for tokens with decimals
 
         uint256 bonus = getBonusInPercent(weiAmount);
         tokensAmount = tokensAmount + tokensAmount.mul(bonus).div(100);
@@ -199,11 +201,6 @@ contract ENRTNCrowdsale is Pausable {
     function setSaleDate(uint256 _start, uint256 _stop) public onlyOwner {
         require(_start >= now);
         require(_stop > _start);
-        saleStart = _start;
-        saleStop = _stop;
-    }
-
-    function setSaleDateUnsafe(uint256 _start, uint256 _stop) public onlyOwner {
         saleStart = _start;
         saleStop = _stop;
     }
@@ -283,6 +280,12 @@ contract ENRTNCrowdsale is Pausable {
     function reclaimToken(ERC20Token anyToken) external onlyOwner {
         uint256 balance = anyToken.balanceOf(this);
         anyToken.transfer(owner, balance);
+    }
+
+    // for test only
+    function setSaleDateUnsafe(uint256 _start, uint256 _stop) public onlyOwner {
+        saleStart = _start;
+        saleStop = _stop;
     }
 }
 
