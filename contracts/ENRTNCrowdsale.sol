@@ -177,21 +177,21 @@ contract ENRTNCrowdsale is Pausable {
     }
 
     function setPrivateSaleDate(uint256 _start, uint256 _stop) public onlyOwner {
-        require(_start > now);
+        require(_start >= now);
         require(_stop > _start);
         privateSaleStart = _start;
         privateSaleStop = _stop;
     }
 
     function setPreSaleDate(uint256 _start, uint256 _stop) public onlyOwner {
-        require(_start > now);
+        require(_start >= now);
         require(_stop > _start);
         preSaleStart = _start;
         preSaleStop = _stop;
     }
 
     function setSaleDate(uint256 _start, uint256 _stop) public onlyOwner {
-        require(_start > now);
+        require(_start >= now);
         require(_stop > _start);
         saleStart = _start;
         saleStop = _stop;
@@ -258,11 +258,11 @@ contract ENRTNCrowdsale is Pausable {
     }
 
     function checkStage() public view returns(bool) {
-        if (now >= privateSaleStart && now <= privateSaleStop) {
+        if (now >= privateSaleStart && now < privateSaleStop) {
             return true;
-        } else if (now >= preSaleStart && now <= preSaleStop) {
+        } else if (now >= preSaleStart && now < preSaleStop) {
             return true;
-        } else if (now >= saleStart && now <= saleStop) {
+        } else if (now >= saleStart && now < saleStop) {
             return true;
         } else {
             return false;
