@@ -191,7 +191,7 @@ contract ENRTNCrowdsale is usingOraclize, Pausable {
         uint256 tokensAmount = weiAmount.mul(rate).div(100).div(10**18);
         require(tokensAmount >= 10 ** decimalsOfToken); // 1 token for tokens with decimals
 
-        uint256 bonus = getBonusInPercent(weiAmount);
+        uint256 bonus = getBonusInPercent(tokensAmount);
         tokensAmount = tokensAmount.add(tokensAmount.mul(bonus).div(100));
 
         token.transfer(_beneficiary, tokensAmount);
@@ -221,7 +221,7 @@ contract ENRTNCrowdsale is usingOraclize, Pausable {
         saleStop = _stop;
     }
 
-    function getBonusInPercent(uint256 weiAmount) public view returns(uint256) {
+    function getBonusInPercent(uint256 tokensAmount) public view returns(uint256) {
         if (now >= privateSaleStart && now <= privateSaleStop) {
             if (weiAmount > 30 ether) {
                 return 30;
