@@ -112,9 +112,9 @@ contract Pausable is Ownable {
     }
 }
 
+import "github.com/oraclize/ethereum-api/oraclizeAPI.sol";
 
-
-contract ENRTNCrowdsale is Pausable {
+contract ENRTNCrowdsale is usingOraclize, Pausable {
     using SafeMath for uint256;
 
     // The token being sold
@@ -130,7 +130,7 @@ contract ENRTNCrowdsale is Pausable {
     uint256 public rate;
     uint256 public weiRaised;
 
-    uint256 decimalsOfToken = 18; //default value
+    uint256 decimalsOfToken = 0; //default value
 
     // Dates
     uint256 public privateSaleStart;
@@ -141,6 +141,10 @@ contract ENRTNCrowdsale is Pausable {
     uint256 public saleStop;
     uint256 public updatePeriod;
 
+    // for oraclize
+    uint CUSTOM_GASLIMIT = 150000;
+    event newOraclizeQuery(string description);
+    
     event TokenPurchase(
         address indexed purchaser,
         address indexed beneficiary,
@@ -148,18 +152,30 @@ contract ENRTNCrowdsale is Pausable {
         uint256 amount
     );
 
-    constructor(ERC20Token _token, address _wallet, uint _rate) public {
+    constructor(ERC20Token _token, address _wallet) public {
         require(_token != address(0));
         require(_wallet != address(0));
 
         wallet = _wallet;
         token = _token;
-
-        rate = _rate;
+    }
+    
+    function setGasLimit(uint _limit) public {
+        CUSTOM_GASLIMIT = _limit;
     }
 
-    function setRate(uint _rate) public onlyOwner {
-        rate = _rate;
+    function __callback(bytes32 myid, string result, bytes proof) public {
+        if (msg.sender != oraclize_cbAddress()) revert();
+        rate = parseInt(result, 2);
+    }
+
+    function update() public payable {
+        if (oraclize_getPrice("URL", CUSTOM_GASLIMIT) > this.balance) {
+            emit newOraclizeQuery("Oraclize query was NOT sent, please add some ETH to cover for the query fee");
+        } else {
+            emit newOraclizeQuery("Oraclize query was sent, standing by for the answer..");
+            oraclize_query("URL", "json(https://api.kraken.com/0/public/Ticker?pair=ETHUSD).result.XETHZUSD.c.0", CUSTOM_GASLIMIT);
+        }
     }
 
     function() external payable whenNotPaused() {
@@ -172,11 +188,11 @@ contract ENRTNCrowdsale is Pausable {
         uint256 weiAmount = msg.value;
         weiRaised = weiRaised.add(weiAmount);
 
-        uint256 tokensAmount = weiAmount.mul(rate);
+        uint256 tokensAmount = weiAmount.mul(rate).div(100).div(10**18);
         require(tokensAmount >= 10 ** decimalsOfToken); // 1 token for tokens with decimals
 
         uint256 bonus = getBonusInPercent(weiAmount);
-        tokensAmount = tokensAmount + tokensAmount.mul(bonus).div(100);
+        tokensAmount = tokensAmount.add(tokensAmount.mul(bonus).div(100));
 
         token.transfer(_beneficiary, tokensAmount);
         wallet.transfer(msg.value);
