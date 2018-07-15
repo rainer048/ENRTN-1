@@ -223,25 +223,25 @@ contract ENRTNCrowdsale is usingOraclize, Pausable {
 
     function getBonusInPercent(uint256 tokensAmount) public view returns(uint256) {
         if (now >= privateSaleStart && now <= privateSaleStop) {
-            if (weiAmount > 30 ether) {
+            if (tokensAmount > 15000) {
                 return 30;
-            } else if (weiAmount > 10 ether) {
+            } else if (tokensAmount > 5000) {
                 return 25;
             } else {
                 return 20;
             }
         } else if (now >= preSaleStart && now <= preSaleStop) {
-            if (weiAmount > 50 ether) {
+            if (tokensAmount > 25000 ether) {
                 return 25;
-            } else if (weiAmount > 30 ether) {
+            } else if (tokensAmount > 15000) {
                 return 20;
-            } else if (weiAmount > 10 ether) {
+            } else if (tokensAmount > 5000) {
                 return 15;
             } else {
                 return 0;
             }
         } else if (now >= saleStart && now <= saleStop) {
-            if (weiAmount > 30 ether) {
+            if (tokensAmount > 15000) {
                 if (now > saleStart + 28 days) {
                     return 0;
                 } else if (now > saleStart + 21 days) {
@@ -253,7 +253,7 @@ contract ENRTNCrowdsale is usingOraclize, Pausable {
                 } else {
                     return 15;
                 }
-            } else if (weiAmount > 11 ether) {
+            } else if (tokensAmount > 5000) {
                 if (now > saleStart + 28 days) {
                     return 0;
                 } else if (now > saleStart + 21 days) {
