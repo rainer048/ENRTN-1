@@ -588,14 +588,11 @@ contract('Main tests', async (accounts) => {
 
     it('set token rate', async function () {
 
-        //await crowdsale.__callback.call(, {from:accounts[5]});
-        //assert.equal(await crowdsale.rate.call().valueOf(), 1);
-        await oraclize.setMyOraclize(accounts[9]);
-        let q = await oraclize.oraclize_cbAddress();
-        console.log(q);
-        console.log(accounts[9]);
-        await crowdsale.__callback("", "44510", "", {from:accounts[9]});
-
+        await crowdsale.setMyOraclize(accounts[5]);
+        await crowdsale.__callback("", "1", "", {from:accounts[5]});
+        let rate1 = await crowdsale.rate.call();
+        let rate2 = await oraclize.parseInt("1", 2);
+        assert.equal(rate1.valueOf(), rate2.valueOf());
     });
 
     it('pause and unpause crowdsale', async function () {
@@ -634,9 +631,9 @@ contract('Main tests', async (accounts) => {
     it('simple crowdsale', async function () {
         const tokensAmountForCrowdsale = new BigNumber(10 * 10 ** 18);
         const time = parseInt(Date.now() / 1000);
-        const rate = 1;
-        const valueInWei = new BigNumber(rate * 10 ** 18);
-        const calcAmount = new BigNumber(1070000000000000000);
+        const rate = 100;
+        const valueInWei = new BigNumber((rate * 10 ** 18)/100);
+        const calcAmount = new BigNumber(1);
 
         const crowdSaleContractValue = await token.crowdSaleContract.call();
         assert.equal(crowdSaleContractValue.valueOf(), crowdsale.address, "crowdsale address is not correct");
