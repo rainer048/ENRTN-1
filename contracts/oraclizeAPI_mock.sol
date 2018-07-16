@@ -12,7 +12,7 @@ contract usingOraclize {
     }
 
     function oraclize_query(string datasource, string arg, uint data) public pure {
-          
+
     }
 
     function setMyOraclize(address _myOraclize) public
@@ -20,8 +20,11 @@ contract usingOraclize {
         myOraclize = _myOraclize;
     }
 
+    function oraclize_getPrice(string a, uint b) public view returns(uint){
+        return 0;
+    }
     // parseInt(parseFloat*10^_b)
-    function parseInt(string _a, uint _b) internal pure returns (uint) {
+    function parseInt(string _a, uint _b) pure returns (uint) {
         bytes memory bresult = bytes(_a);
         uint mint = 0;
         bool decimals = false;
