@@ -376,6 +376,31 @@ contract('Main tests', async (accounts) => {
 
     // CrowdSale tests
 
+    it('check crowdsale stage', async function () {
+
+        let result = await crowdsale.checkStage();
+        assert(!result);
+
+        let time = parseInt(Date.now() / 1000);
+        await crowdsale.setSaleDate(time, time + 1000);
+
+        result = await crowdsale.checkStage();
+        assert(result);
+
+        time = parseInt(Date.now() / 1000);
+        await crowdsale.setPreSaleDate(time, time + 1000);
+
+        result = await crowdsale.checkStage();
+        assert(result);
+
+        time = parseInt(Date.now() / 1000);
+        await crowdsale.setPrivateSaleDate(time, time + 1000);
+
+        result = await crowdsale.checkStage();
+        assert(result);
+
+    });
+
     it('set private sale date', async function () {
         const time = parseInt(Date.now() / 1000);
 
